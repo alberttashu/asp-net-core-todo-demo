@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Todo.Api</name>
+    </assembly>
+    <members>
+        <member name="M:Todo.Api.Controllers.TodoController.GetTask(System.Int32,System.String)">
+            <summary>
+            Позволяет поличить конкретную задачу.
+            </summary>
+            <param name="id"></param>
+            <param name="mediaType"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>
