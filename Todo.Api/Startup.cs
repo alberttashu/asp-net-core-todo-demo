@@ -1,15 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Todo.Api.Persistence;
+using Todo.Api.Persistence.Repositories;
 
 namespace Todo.Api
 {
@@ -27,35 +24,23 @@ namespace Todo.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers(options =>
+            services.AddLogging(loggingBuilder =>
             {
-                //options.Filters.Add(new ProducesAttribute("application/json", "application/xml"));
+                loggingBuilder.AddConsole();
+            });
+            
+            services.AddSwagger();
 
-                //options.ReturnHttpNotAcceptable = true;
-                
-                // options.InputFormatters.Add(
-                //     new XmlDataContractSerializerInputFormatter(options)
-                // );
-                // options.OutputFormatters.Add(
-                //     new XmlDataContractSerializerOutputFormatter()
-                // );
+            services.AddAndConfigureControllers();
+
+
+            var connectionString = Configuration["ConnectionStrings:Todo"];
+            services.AddDbContext<TodoDbContext>(options =>
+            {
+                options.UseSqlServer(connectionString);
             });
 
-#region Swagger
-            // services.AddSwaggerGen(options =>
-            // {
-            //     options.SwaggerDoc($"todo-v1.0", new OpenApiInfo()
-            //     {
-            //         Description = "Simple API example with tasklists and tasks",
-            //         Title = $"Todo API v1.0",
-            //         Version = "v1.0"
-            //     });
-
-            //     var xmlCommentsFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-            //     var xmlCommentsFullPath = Path.Combine(AppContext.BaseDirectory, xmlCommentsFile);
-            //     options.IncludeXmlComments(xmlCommentsFullPath);
-            // });
-#endregion
+            services.AddScoped<ITodoRepository, TodoRepository>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -65,16 +50,17 @@ namespace Todo.Api
                 app.UseDeveloperExceptionPage();
             }
 
-#region Swagger 
-            // app.UseSwagger();
-            // app.UseSwaggerUI(options =>
-            // {
-            //     options.SwaggerEndpoint($"/swagger/books-v1.0/swagger.json", $"books-v1.0");
-            //     options.RoutePrefix = "";
-            //     options.EnableDeepLinking();
-            //     options.DisplayOperationId();
-            // });
-#endregion 
+            app.UseSwagger(options =>
+            {
+                options.RouteTemplate = "/swagger/{documentName}/swagger.json";
+            });
+
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint($"/swagger/todo-v1.0/swagger.json", $"todo-v1.0");
+                options.EnableDeepLinking();
+                options.DisplayOperationId();
+            });
 
             app.UseRouting();
 
@@ -85,3 +71,4 @@ namespace Todo.Api
         }
     }
 }
+
