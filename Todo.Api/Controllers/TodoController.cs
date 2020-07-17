@@ -6,10 +6,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Todo.Api.Contracts;
 using Todo.Api.Persistence.Repositories;
 using Todo.Api.Extensions;
 using Todo.Api.Model;
+using Todo.Api.Persistence;
+using Todo.BusinessLogic;
 using DayOfWeek = Todo.Api.Model.DayOfWeek;
 
 namespace Todo.Api.Controllers
@@ -19,13 +22,14 @@ namespace Todo.Api.Controllers
     public class TodoController : ControllerBase
     {
         private readonly ILogger<TodoController> _logger;
-        private readonly ITodoRepository _todoRepository;
+        private readonly ITodoService _todoService;
 
-        public TodoController(ILogger<TodoController> logger,
-            ITodoRepository todoRepository)
+        public TodoController(
+            ILogger<TodoController> logger,
+            ITodoService todoService)
         {
             _logger = logger;
-            _todoRepository = todoRepository;
+            _todoService = todoService;
         }
 
 
@@ -42,7 +46,7 @@ namespace Todo.Api.Controllers
             "application/vnd.todo.taskwithoutdescription+json")]
         public async Task<ActionResult<TodoOutputContract>> GetTask(int id, [FromHeader(Name = "Accept")] string mediaType)
         {
-            var todoEntity = await _todoRepository.GetByIdAsync(id);
+            var todoEntity = await _todoService.GetTodo(id);
 
             if (todoEntity == null)
             {
@@ -65,28 +69,20 @@ namespace Todo.Api.Controllers
 
         [HttpGet]
         [Route("", Name = "GetTasks")]
-        public ActionResult<List<TodoOutputContract>> GetTasks()
+        public async Task<ActionResult<List<TodoOutputContract>>> GetTasks()
         {
-            var resource = new List<TodoOutputContract>()
-            {
-                new TodoOutputContract()
-                {
-                    Id = 10,
-                    Description = "Task description",
-                    Title = "First Task"
-                }
-            };
+            var tasks = await _todoService.GetAllTodos();
 
-            return Ok(resource);
+            var outputModel = tasks.Select(x => x.ToTodoOutputContract());
+
+            return Ok(outputModel);
         }
 
 
         [HttpPost]
         public async Task<ActionResult> CreateTodo(CreateTaskInputContract request)
         {
-            var todo = new Model.Todo(request.Title, request.Description, new Interval(DayOfWeek.Monday, 1));
-
-            todo = await _todoRepository.CreateAsync(todo);
+            var todo = await _todoService.CreateOneTimeTodo(request.Title, request.Description);
 
             var createdTask = todo.ToTodoOutputContract();
 
