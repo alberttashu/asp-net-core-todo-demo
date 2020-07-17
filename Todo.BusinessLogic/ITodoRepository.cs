@@ -5,10 +5,10 @@ namespace Todo.Api.Persistence.Repositories
 {
     public interface ITodoRepository
     {
-        public Task<Model.Todo> GetByIdAsync(int id);
+        Task<Model.Todo> GetByIdAsync(int id);
         
-        public Task<List<Model.Todo>> GetAllAsync();
+        Task<List<Model.Todo>> GetAllAsync();
 
-        public Task<Model.Todo> CreateAsync(Model.Todo todo);
+        Task<Model.Todo> CreateAsync(Model.Todo todo);
     }
 }

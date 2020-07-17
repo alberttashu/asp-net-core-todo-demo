@@ -33,14 +33,10 @@ namespace Todo.Api
 
             services.AddAndConfigureControllers();
 
+            services.AddTodoLogic();
 
             var connectionString = Configuration["ConnectionStrings:Todo"];
-            services.AddDbContext<TodoDbContext>(options =>
-            {
-                options.UseSqlServer(connectionString);
-            });
-
-            services.AddScoped<ITodoRepository, TodoRepository>();
+            services.AddTodoDataAccess(connectionString);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
